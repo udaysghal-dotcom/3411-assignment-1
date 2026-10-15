@@ -8,7 +8,17 @@
 # import numpy as np
 import copy
 import argparse
+#**********************************************************************
+# Helper functions
 
+# Helper to print start state and actions for solution
+def print_solution(start_state, solution):
+    start_state.print_state()
+    for action, state in solution:
+        state.print_action(action)
+        state.print_state()
+
+#**********************************************************************
 class State:
     # Is a class attribute and does not live in a single instance
     heuristic_name = "h3a"
@@ -158,11 +168,7 @@ def ids_driver_standard(disks, pegs):
     start_state = State.start_state(disks, pegs)
     solution, expanded_paths = iterative_deepening_search(start_state, "old")
     print(f"Performing iterative deepening search on disks: {disks} and pegs: {pegs}")
-    start_state.print_state()
-
-    for action, state in solution:
-        state.print_action(action)
-        state.print_state()
+    print_solution(start_state, solution)
     
     print(f"Solution length f({disks},{pegs}) = {len(solution)}")
     print(f"Expanded states: {expanded_paths}")
@@ -238,10 +244,7 @@ def ida_star_driver(disks, pegs, heuristic, print_moves):
     expected_val = (2 ** disks) - 1
 
     if print_moves:
-        start_state.print_state()
-        for action, state in solution:
-            state.print_action(action)
-            state.print_state()
+        print_solution(start_state, solution)
 
     print(f"Expanded States: {expanded_paths}")
     print(f"Solution length ({disks}, {pegs}) = {len(solution)}")
@@ -260,10 +263,7 @@ def ida_star_driver_4a(disks, pegs, print_moves):
     solution, expanded_paths = ida_star_search(start_state)
 
     if print_moves:
-        start_state.print_state()
-        for action, state in solution:
-            state.print_action(action)
-            state.print_state()
+        print_solution(start_state, solution)
     
     print(f"f({disks},{pegs}) = {len(solution)}, expanded states = {expanded_paths}")
     return len(solution), expanded_paths
