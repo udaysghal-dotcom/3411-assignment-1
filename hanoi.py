@@ -248,9 +248,9 @@ def q1_2_ida_star_driver(disks, pegs, heuristic, print_moves):
     print(f"Expected value: 2^d - 1 = {expected_val}")
 
     if expected_val == len(solution):
-        print("Expected value matches solution")
+        print("Expected value matches solution\n")
     else:
-        print("Expected value does not match solution")
+        print("Expected value does not match solution\n")
 
     return len(solution), expanded_paths
 
@@ -272,23 +272,28 @@ if __name__ == "__main__":
     arguments = arg_parser.parse_args()
     
     # 1.1
-    # ids_driver_standard(arguments.disks, arguments.pegs, "old")
+    q1_1_ids_driver(arguments.disks, arguments.pegs)
+    print("Q1.1 passed")
 
     # 1.2
-    # for d in (4, 5):
-    #     ida_star_driver(d, 3, "h3a", False)
+    for d in (4, 5):
+        q1_2_ida_star_driver(d, 3, "h3a", False)
+    print("Q1.2a Passed")
     
-    # for d in (4, 5, 6):
-    #     ida_star_driver(d, 3, "h3b", True)
+    for d in (4, 5, 6):
+        q1_2_ida_star_driver(d, 3, "h3b", True)
+    print("Q1.2b Passed")
 
     # 1.3a
-    # k_values = []
-    # for d in range(7):
-    #     length, _ = ids_driver_k(d, 4)
-    #     k_values.append(length)
-    #     print(k_values)
+    k_values = []
+    for d in range(7):
+        solution, _ = q1_3a_ids_driver_k(d, 4)
+        k_values.append(len(solution))
+        print(k_values)
+    print("Q1.3a Passed")
 
-    # 1.3b
+    1.3b
     for d in range(1, 8):
-        ida_star_driver_4a(d, 4, False)
+        q1_3c_ida_star_driver_h4a(d, 4, False)
+    print()
 
