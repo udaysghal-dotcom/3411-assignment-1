@@ -292,7 +292,7 @@ if __name__ == "__main__":
         print(k_values)
     print("Q1.3a Passed")
 
-    1.3b
+    # 1.3b
     for d in range(1, 8):
         q1_3c_ida_star_driver_h4a(d, 4, False)
     print()
