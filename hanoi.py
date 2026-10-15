@@ -30,7 +30,7 @@ class State:
             a.append([])
         return (State(a, disks, pegs))
 
-    def is_equal_to(self,other):
+    def is_equal_to(self, other):
         return (self.a == other.a)
 
     # Check every possible legal move from a given board state
@@ -141,9 +141,10 @@ def iterative_deepening_search(state, goal_type):
     
     return False
 
-def ids_driver(disks, pegs, goal_type, print_moves=True):
+# For Section 1.2
+def ids_driver_standard(disks, pegs):
     start_state = State.start_state(disks, pegs)
-    solution, expanded_paths = iterative_deepening_search(start_state, goal_type)
+    solution, expanded_paths = iterative_deepening_search(start_state, "old")
     print(f"Performing iterative deepening search on disks: {disks} and pegs: {pegs}")
     start_state.print_state()
 
@@ -156,6 +157,17 @@ def ids_driver(disks, pegs, goal_type, print_moves=True):
 
     # placeholder for now, can change later
     return
+
+# For Section 1.3
+def ids_driver_k(disks, pegs):
+    start_state = State.start_state(disks, pegs)
+    solution, expanded_paths = iterative_deepening_search(start_state, "new")
+
+    print(f"Computing k({disks}) with {pegs} pegs using iterative deepening search")
+    print(f"k({disks}) = {len(solution)}")
+    print(f"Expanded states: {expanded_paths}")
+
+    return solution, expanded_paths
 
 # Section 1.2
 def ida_star_bound_search(state, g, bound, path_set, search_statistics):
@@ -237,7 +249,7 @@ if __name__ == "__main__":
     arguments = arg_parser.parse_args()
     
     # 1.1
-    # ids_driver(arguments.disks, arguments.pegs, "old")
+    # ids_driver_standard(arguments.disks, arguments.pegs, "old")
 
     # 1.2
     # for d in (4, 5):
@@ -247,9 +259,9 @@ if __name__ == "__main__":
     #     ida_star_driver(d, 3, "h3b", True)
 
     # 1.3
-    k_values = []
-    for d in range(7):
-        length, _ = ids_driver(d, 4, "new", print_moves=False)
-        k_values.append(length)
-    print("k(0..6) =", k_values)
+    # k_values = []
+    # for d in range(7):
+    #     length, _ = ids_driver_k(d, 4)
+    #     k_values.append(length)
 
+    
