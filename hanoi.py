@@ -12,6 +12,7 @@ import argparse
 class State:
     # Is a class attribute and does not live in a single instance
     heuristic_name = "h3a"
+    k = [0, 1, 2, 4, 6, 8, 12]
 
     def __init__(self, a, disks, pegs):
         # Where board and pegs are being stored
@@ -21,9 +22,11 @@ class State:
 
         if State.heuristic_name == "h3a":
             self.h = self.heuristic3a()
-        else:
+        elif State.heuristic_name == "h3b":
             self.h = self.heuristic3b()
-
+        else:
+            self.h = self.heuristic4a()
+    
     def start_state(disks, pegs):
         a = [list(range(1, disks + 1))]
         for p in range(pegs - 1):
@@ -40,7 +43,7 @@ class State:
             if self.a[p] != []:
                 for q in range(len(self.a)):
                     if self.a[q] == [] or self.a[q][0] > self.a[p][0]:
-                        new_a = copy.deepcopy(self.a)
+                        new_a = [peg[:] for peg in self.a]
                         new_a[q].insert(0, new_a[p][0])
                         new_a[p].pop(0)
                         children.append((State(new_a, self.disks, self.pegs), str(new_a[q][0]) + ':' + str(p+1) + '->' + str(q+1),1))
@@ -84,6 +87,15 @@ class State:
             return pow(2, c - 1) + pow(2, self.disks - 1)
         
         return self.heuristic3a()
+    
+    def heuristic4a(self):
+        final_peg = self.a[self.pegs - 1]
+
+        for c in range(self.disks, 0, -1):
+            if c not in final_peg:
+                return 1 + State.k[c - 1]
+        
+        return 0
 
 # Create an immutable snapshot of the board state
 def create_state_key(state):
@@ -241,6 +253,20 @@ def ida_star_driver(disks, pegs, heuristic, print_moves):
         print("Expected value does not match solution")
 
     return len(solution), expanded_paths
+
+def ida_star_driver_4a(disks, pegs, print_moves):
+    State.heuristic_name = "h4a"
+    start_state = State.start_state(disks, pegs)
+    solution, expanded_paths = ida_star_search(start_state)
+
+    if print_moves:
+        start_state.print_state()
+        for action, state in solution:
+            state.print_action(action)
+            state.print_state()
+    
+    print(f"f({disks},{pegs}) = {len(solution)}, expanded states = {expanded_paths}")
+    return len(solution), expanded_paths
     
 if __name__ == "__main__":
     arg_parser = argparse.ArgumentParser()
@@ -258,10 +284,14 @@ if __name__ == "__main__":
     # for d in (4, 5, 6):
     #     ida_star_driver(d, 3, "h3b", True)
 
-    # 1.3
+    # 1.3a
     # k_values = []
     # for d in range(7):
     #     length, _ = ids_driver_k(d, 4)
     #     k_values.append(length)
+    #     print(k_values)
 
-    
+    # 1.3b
+    for d in range(1, 8):
+        ida_star_driver_4a(d, 4, False)
+
