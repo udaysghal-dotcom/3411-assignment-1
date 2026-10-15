@@ -1,0 +1,522 @@
+COMP3411 26T3
+Artificial Intelligence
+Assignment 1 – Search and Decision Trees
+Due:
+Worth:
+Submission:
+
+1
+
+Week 5, Friday, 16 October 2026, 5 pm.
+25 marks (25% of the final course mark)
+Electronic submission via Moodle
+
+Tower of Hanoi
+
+Tower of Hanoi (https://en.wikipedia.org/wiki/Tower_of_Hanoi) is a famous problem
+involving some number d of disks arranged on some number p of pegs. The disks increase in
+size so that disk 2 is larger than disk 1, disk 3 is larger than disk 2, etc., and disk d is larger
+than disk (d − 1) (See Fig. 1).
+
+Figure 1: Tower of Hanoi with d = 8, and p = 3. Source: https://commons.wikimedia.org/
+wiki/File:Tower_of_Hanoi.jpeg
+Initially, all disks are placed on the first peg as shown in the figure, in order 1, 2, . . . , d
+(counting from the top downwards). Throughout this assignment, the initial peg is peg 1 and
+the final peg is peg p. The aim is to move all of the disks to the final peg through a sequence
+of moves, adhering to these rules:
+(a)
+
+at each time step, only one disk may be moved from one peg to another (only the topmost
+disk on a peg may be moved),
+
+(b)
+
+a larger disk must never be placed on top of a smaller disk.
+
+We will use f (d, p) to denote the minimum number of moves required to transition from the
+initial state (where all disks are on the first peg) to the goal state (where all disks are on the
+final peg).
+
+1
+
+1.1
+
+Getting Started
+
+Download the file hanoi.zip from Moodle. Inside it there is a file named hanoi.py, which is
+the Tower of Hanoi puzzle environment. You must use this implementation. You may add your
+own code or classes to hanoi.py.
+Write code that finds a solution to Tower of Hanoi with p = 3 pegs and d = 4 disks using
+Iterative Deepening Search. Your code must print:
+• the final solution length f (d, p),
+• all of the moves in the optimal solution,
+• the total number of expanded states.
+State representation. A state is represented as a list of lists, with the disks on each peg
+listed in increasing order of size (i.e. the topmost disk first). For example, with d = 3 and
+p = 3 the initial state is [[1,2,3], [], []] and the goal state is [[], [], [1,2,3]].
+Search conventions (these apply to all of Section 1). Because you are asked to report
+the number of expanded states, everyone must count the same way.
+• A state is counted as expanded at the moment its successors are generated. Do not count
+states that are only goal-tested.
+• Your Iterative Deepening and IDA* implementations must avoid revisiting states that
+already appear on the current search path (path-based cycle checking). Do not maintain
+a global visited set across iterations for these two algorithms, as this changes the reported
+counts. Where a different algorithm is required, the question says so explicitly.
+
+1.2
+
+Implementing and Comparing Admissible Heuristics
+
+You should observe that IDS finds a solution quickly for values of d between 1 and 4, but does
+not scale to d = 5. (You do not need to let this run to completion.) You may notice a pattern
+(which is well known, and can be proven recursively) that f (d, 3) is given by the formula:
+f (d, 3) = 2d − 1
+
+(1)
+
+The optimal path itself could also be found analytically; however, for the purpose of this
+assignment we will rely on IDA* search to find the actual paths, and will use Eqn. (1) only for
+the purpose of constructing admissible heuristics. If you look at the file hanoi.py you will see
+we have provided python code in the method heuristic3a() for the heuristic h3a () defined as
+follows:
+
+2c−1 , where c is the largest disk not on the final peg,
+h3a (s) =
+0,
+if all disks are on the final peg.
+
+2
+
+(a)
+
+Write code that runs an Iterative Deepening A* (IDA*) Search using heuristic h3a () for
+p = 3, with d = 4 and then with d = 5. For each value of d, print the number of expanded
+states and the final solution length f (d, 3). Check that the solution lengths agree with
+Eqn. (1).
+
+(b)
+
+You should observe that heuristic h3a () finds a solution quickly for d = 5 but is rather slow
+for d = 6. We would therefore like to implement a new heuristic h3b () which dominates
+h3a (), and is defined as follows:
+
+
+2d−1 ,
+if the final peg is empty,
+
+
+
+
+2c−1 + 2d−1 , if c is the largest disk on the final peg, with c < d,
+h3b (s) =
+
+2c−1 ,
+if c is the largest disk not on the final peg, with c < d,
+
+
+
+
+0,
+if all disks are on the final peg.
+
+(c)
+
+1.3
+
+Implement heuristic h3b (s) in the form of a python method called heuristic3b(). In
+hanoi.py you need to set self.h equal to self.heuristic3b() in the init () method
+for the State class. Run IDA* Search using heuristic h3b () for d = 4, 5 and 6. For each
+value of d, print the number of expanded states, the solution, and the final solution length
+f (d, 3).
+
+Solving Tower of Hanoi with Four Pegs
+
+We now consider the Tower of Hanoi puzzle with 4 pegs. Our intention is to create a heuristic
+h4a () which is similar to h3a () but with 2c−1 replaced by another function 1 + k(c − 1). The
+function k(d) is defined to be the minimum number of steps required to transition from the
+initial state (with all d disks on the first peg) to some state where both the first peg and the
+final peg are empty (which means all the disks must be distributed between the two remaining
+pegs). By convention, k(0) = 0. The new heuristic h4a () will then be defined as follows:
+
+1 + k(c − 1), where c is the largest disk not on the final peg,
+h4a (s) =
+0,
+if all disks are on the final peg.
+(a)
+
+In hanoi.py, rename the existing is goal() method to is goal old() and define a new
+is goal() method which returns True if both the initial peg and the final peg are empty,
+and False otherwise. Include this code in your solution.
+Using this new is goal() method, apply Iterative Deepening Search with p = 4 to compute
+k(d) for all values of d between 0 and 6, and print these values. Note that the cost grows
+steeply with d: k(6) requires on the order of a few million expanded states and may take
+a minute or two to run. This is expected and does not indicate a bug.
+
+(b)
+
+Define a list or array called State.k containing the pre-computed values of k(d) for all
+values of d between 0 and 6 (you can include this in the start state() method). Use this
+to implement the heuristic h4a () in the form of a python method called heuristic4a().
+Set self.h to self.heuristic4a(), reinstate the original is goal() method, and apply
+3
+
+IDA* Search using heuristic h4a () to compute f (d, 4) for all values of d between 1 and 7.
+Include these values, as well as the number of expanded states, in your solution. As in the
+previous part, the largest case is much more expensive than the others: d = 7 requires on
+the order of ten million expanded states and may take a minute or two.
+Do you notice any mathematical relationship between f (d, 4) and k(d − 1)? State this
+relationship, and briefly explain why it should be true for all values of d.
+
+(c)
+
+Note: If you are interested in knowing how f (d, 4) can be computed for larger values of d, you
+might like to look at these two papers:
+• Korf, R., 2004. Best-First Frontier Search with Delayed Duplicate Detection, AAAI-04,
+650–657.
+• Korf, R. & Felner, A., 2007. Recent Progress in Heuristic Search: A Case Study of the
+Four-Peg Towers of Hanoi Problem, IJCAI-07, 2324–2329.
+
+2
+
+Customer Churn Prediction
+
+Customer churn prediction is a standard real-world classification problem in telecommunications. Service providers want to identify customers who are likely to cancel their subscriptions,
+because retaining an existing customer is usually cheaper than acquiring a new one.
+In this assignment, you will build entropy-based decision trees and ensemble models in
+Python to predict whether a customer will churn in the next 30 days. You will work with
+a tabular dataset containing customer account information, billing behaviour, service choices,
+and recent support history. The goal is to predict the binary target variable churned, where
+churned = 1 means the customer cancelled service in the next 30 days and churned = 0 means
+the customer remained active.
+D denotes a dataset, H(D) is the entropy of the class labels in D, and IG(D, A) is the
+information gain for attribute test A. The entropy of a binary-labelled dataset is:
+H(D) = −
+
+X
+
+p(c) log2 p(c)
+
+(2)
+
+c∈{0,1}
+
+For a split test A, the information gain is:
+IG(D, A) = H(D) −
+
+k
+X
+|Di |
+i=1
+
+|D|
+
+H(Di )
+
+(3)
+
+where D1 , . . . , Dk are the subsets induced by the split.
+For numerical attributes, candidate threshold tests have the form xj ≤ t, where candidate thresholds are midpoints between consecutive sorted distinct values. Inside the provided
+trees.zip file (available on Moodle) you will find:
+• trees.py: starter code for loading the churn dataset, representing nodes, computing evaluation metrics, and running experiments
+4
+
+• data/churn train.csv: training set
+• data/churn valid.csv: validation set
+• data/churn test.csv: test set
+• data/data dictionary.md: feature descriptions
+You must use this implementation as the basis for your work.
+Reproducibility. Several tasks in this section are randomised. Seed all sources of randomness with the 3411 number, and state the seed you used. Your reported results must be
+reproducible by re-running your submitted code with no error.
+Reporting metrics. Before reporting any model results, print the class balance of the training, validation and test sets, and the accuracy of a trivial baseline that always predicts the
+majority class. Every accuracy you report in this section must be compared against this baseline. In addition to accuracy, report the F1 score for the churn class (churned = 1) wherever
+you report accuracy.
+
+2.1
+
+Getting Started
+
+Run trees.py before making any changes. It should load the dataset and print summary
+information. Read the code and identify the methods marked TODO. Print the class balance
+and majority-class baseline described above.
+You will build your decision tree learner over the next three subsections: Section 2.2 covers
+the split criterion, Section 2.3 covers numerical thresholds, and together these give you the
+complete learner. Your finished learner must:
+(a)
+
+stop splitting when all examples at the node have the same label,
+
+(b)
+
+stop splitting when no candidate split has positive information gain,
+
+(c)
+
+predict the majority class at each leaf,
+
+(d)
+
+support both categorical splits and binary threshold splits for numerical features.
+
+2.2
+
+Implementing Information Gain
+
+If you inspect trees.py, you will find that code for entropy() has already been provided, along
+with placeholders for split-selection methods. Implement split selection using information gain
+as defined in Eqn. (3). For the experiments in this subsection, use categorical attributes only.
+Numerical attributes must be added in Section 2.3.
+Train a decision tree on churn train.csv and print, in a readable text form, the first three
+levels of the tree.
+You should observe that a deep tree can achieve excellent training accuracy on churn data,
+but may overfit, because local greedy choices can capture noise and small customer subgroups.
+5
+
+Run your experiment for maximum depths of 2, 3, 4, 5, and unrestricted depth. For each
+setting, print:
+• the maximum depth allowed (the setting) and the depth actually reached by the learned
+tree,
+• the number of internal nodes,
+• training, validation and test accuracy, and the corresponding F1 scores.
+State which depth you would choose and why.
+
+2.3
+
+Numerical Threshold Search
+
+Several churn features are numerical, such as tenure months, monthly charges, avg monthly gb,
+and support tickets 90d. Implement threshold search over numerical attributes by considering midpoints between consecutive sorted distinct values, and integrate this into your splitselection code so that your learner supports both categorical and numerical splits. From this
+subsection onwards, numerical attributes must be integrated into the split-selection code together with the categorical attributes.
+Print the best threshold chosen for each of the following attributes when they are evaluated
+at the root node: tenure months, monthly charges, avg monthly gb, and support tickets 90d.
+Briefly discuss why numerical threshold search is more computationally expensive than
+categorical splitting. Looking at your learned trees, what types of customer behaviour seem
+most predictive of churn?
+
+2.4
+
+Solving the Churn Problem with Ensemble Learning
+
+We now consider ensemble learning. A single tree is interpretable, but churn behaviour is often
+driven by multiple interacting factors and may be unstable under small changes to the training
+set. Our intention is to build ensembles that combine many trees and reduce variance.
+2.4.1
+
+Bagging
+
+Implement bootstrap aggregation using your own tree learner as the base model. Create a
+method that trains B trees, each on a bootstrap sample of the training set (sampled with
+replacement, of the same size as the training set). Use majority voting at prediction time.
+Run experiments for at least three different values of B. For each value of B, print training,
+validation and test accuracy, the corresponding F1 scores, and the average depth of the trees.
+2.4.2
+
+Random Forests
+
+Define a random forest variant in which only a random subset of m features may be considered
+at each internal node, where d is the number of input features. Implement this restriction in the
+split-selection code. Your random forest should use bootstrap sampling in the same way as your
+bagging implementation, so that the only difference between the two is the feature restriction;
+
+6
+
+this means that the m = d setting should behave the same as bagging up to random variation,
+and you can use this as a check on your implementation.
+√
+Train random forests using m = ⌊ d⌋ and m = d, and compare them with the bagged
+trees from the previous part. Report training, validation and test accuracy, F1 scores, and the
+average depth of the trees. Explain why feature-level randomness can improve generalisation.
+2.4.3
+
+Ensemble Design
+
+Select or design an ensemble method and implement it. Your method must use an entropy-based
+split criterion somewhere in the training. Examples include:
+• AdaBoost with decision stumps
+• AdaBoost with shallow trees
+• extra-trees style random threshold forests
+• a weighted-voting forest where each tree is weighted by its validation accuracy
+• your own original ensemble design
+Record your method’s accuracy and F1 score on the provided train, validation and test
+splits. Explain your method clearly, justify your design choices, and explain why it should help
+on churn prediction in particular. Which model in your experiments gives the best trade-off
+between interpretability and predictive performance?
+2.4.4
+
+Early Stopping Rule
+
+Design your own pruning or early-stopping rule for entropy-based decision trees and implement
+it in both your bagging and random forest models. For both methods, with and without your
+rule, record the training time and the training, validation and test accuracy.
+Explain your rule, justify its design, and discuss its effect on the training process. Finally,
+report whether your rule improves or degrades validation and test accuracy and F1 score.
+
+3
+
+Submission and Assessment
+
+3.1
+
+What to submit
+
+Submit a single ZIP file to Moodle containing:
+• hanoi.py — your Tower of Hanoi code,
+• trees.py — your decision tree and ensemble code,
+• report.ipynb — a Jupyter notebook that imports from the two files above, runs every
+experiment, and displays all required output.
+
+7
+
+Do not paste your implementation into the notebook: the notebook is there to run your
+code and present the results. Do not include the provided data files in your submission.
+Written answers. Several questions ask you to explain, justify or discuss something.
+All written answers must appear in markdown cells in report.ipynb, immediately below the
+relevant output, clearly labelled with the question number. Written answers carry a substantial
+proportion of the marks for this assignment.
+The first line of each .py file, and the first cell of your notebook, must include your full
+name and zID.
+All required results must already be displayed in the notebook output at the time of submission, and the code must be ready to re-run without modification. You are responsible for
+ensuring that your submitted files are well organised, readable and easy to follow.
+You may submit as many times as you like before the deadline; each new submission overwrites the previous one. After submitting, it is good practice to take a screenshot of your
+submission for your records.
+
+3.2
+
+Discussion session
+
+Your tutor will assess your assignment during a scheduled discussion session in Week 6. All
+required results must already be displayed in the notebook output, and the code must be ready
+to rerun without modification. Your tutor will arrange the discussion time, either during tutorial
+hours or by coordinating directly with students. You are required to attend your scheduled
+discussion. Failure to attend the discussion will result in a mark of zero for the assignment.
+
+3.3
+
+Marking scheme
+Table 1: Marking scheme for the assignment.
+Criteria
+
+Marks
+
+Assignment implementation and notebook
+1.1 Getting Started
+1.2 Implementing Heuristics
+1.3 Solving Tower of Hanoi with Four Pegs
+2.1 Getting Started
+2.2 Implementing Information Gain
+2.3 Numerical Threshold Search
+2.4 Solving the Churn Problem
+Understanding and discussion
+Foundations of coding
+Search (Tower of Hanoi)
+Decision trees (Customer churn)
+Total marks
+
+4
+
+1
+1
+1
+1
+1
+1
+2
+4
+6
+7
+25
+
+Deadline and questions
+
+Deadline: Week 5, Friday, 16 October 2026, 5 pm.
+Late submissions: a penalty of 5% of the maximum mark per day applies to late submissions.
+If you submit more than 5 days late, you will receive a mark of zero.
+8
+
+Please use the Moodle forum for assignment questions; we will prioritise questions asked
+there. When posting, do not include your code or complete answers, as the forum is visible to all
+students. If your question cannot be asked without showing your code, email the course account
+cs3411@cse.unsw.edu.au instead. For questions about your discussion session, contact your
+tutor directly; tutor email addresses are listed in Table 2.
+Table 2: COMP3411 26T3 Tutorials
+Class
+4148
+4149
+12979
+12981
+4150
+4151
+13097
+13096
+4156
+4157
+4158
+4159
+4160
+12983
+12984
+
+Section
+F11A
+F13A
+F15A
+F15B
+H09A
+H09B
+H13A
+H18A
+W09A
+W11A
+W13A
+W15A
+W18A
+F15C
+F15D
+
+Tutor
+Chunyang Meng
+Joffrey Ji
+Hongkun Yu
+Adam Stucci
+Joffrey Ji
+Chunyang Meng
+Reet Mahajan
+Adam Stucci
+Hongkun Yu
+Hadha Afrisal
+John Chen
+John Chen
+Hadha Afrisal
+Reet Mahajan
+Zhongsui Guo
+
+Email
+chunyang.meng@unsw.edu.au
+joffrey.ji@unsw.edu.au
+hongkun.yu@student.unsw.edu.au
+a.stucci@unsw.edu.au
+joffrey.ji@unsw.edu.au
+chunyang.meng@unsw.edu.au
+r.mahajan@student.unsw.edu.au
+a.stucci@unsw.edu.au
+hongkun.yu@student.unsw.edu.au
+hadha.afrisal@unsw.edu.au
+x.chen@unsw.edu.au
+x.chen@unsw.edu.au
+hadha.afrisal@unsw.edu.au
+r.mahajan@student.unsw.edu.au
+zhongsui.guo@unsw.edu.au
+
+Academic integrity
+All submitted work must be your own. Group submissions are not permitted. Collaboration is
+limited to high-level discussion of concepts; code, text and plots must be authored individually.
+Do not copy code from other students or from the Internet, do not allow anyone to see your
+code, and do not upload your code to a publicly accessible repository.
+Use of generative AI tools. You may use AI tools such as ChatGPT, Claude, GitHub
+Copilot or Gemini to help you learn and to debug your own code. However, all submitted
+code must be your own work, and you must be able to explain every line of your submission
+during the discussion session. Being unable to explain your own submission will be treated as
+academic misconduct, regardless of how the code was produced.
+
+9
+
+
