@@ -8,6 +8,7 @@
 # import numpy as np
 import copy
 import argparse
+
 #**********************************************************************
 # Helper functions
 
@@ -17,6 +18,15 @@ def print_solution(start_state, solution):
     for action, state in solution:
         state.print_action(action)
         state.print_state()
+
+# Create an immutable snapshot of the board state
+def create_state_key(state):
+    state_key = []
+    
+    for peg in state.a:
+        state_key.append(tuple(peg))
+    
+    return tuple(state_key)
 
 #**********************************************************************
 class State:
@@ -107,16 +117,7 @@ class State:
         
         return 0
 
-# Create an immutable snapshot of the board state
-def create_state_key(state):
-    state_key = []
-    
-    for peg in state.a:
-        state_key.append(tuple(peg))
-    
-    return tuple(state_key)
-
-def depth_limited_search(state, limit, path_set, search_statistics, goal_type="old"):
+def ids_depth_limited_search(state, limit, path_set, search_statistics, goal_type="old"):
     if goal_type == "old" and state.is_goal_old():
         return []
 
@@ -135,7 +136,7 @@ def depth_limited_search(state, limit, path_set, search_statistics, goal_type="o
             continue
 
         path_set.add(state_key)
-        result = depth_limited_search(child, limit - 1, path_set, search_statistics, goal_type)
+        result = ids_depth_limited_search(child, limit - 1, path_set, search_statistics, goal_type)
         path_set.remove(state_key)
 
         # reached goal and returned []
@@ -146,13 +147,13 @@ def depth_limited_search(state, limit, path_set, search_statistics, goal_type="o
     # else did not reach result
     return None
 
-def iterative_deepening_search(state, goal_type):
+def ids_search(state, goal_type):
     search_statistics = { "expanded_paths": 0 }
     limit = 0
     init_state_key = create_state_key(state)
 
     while True:
-        search_result = depth_limited_search(state, limit, {init_state_key}, search_statistics, goal_type)
+        search_result = ids_depth_limited_search(state, limit, {init_state_key}, search_statistics, goal_type)
         
         if search_result is not None:
             # a path was found, return full path and stats
@@ -163,23 +164,21 @@ def iterative_deepening_search(state, goal_type):
     
     return False
 
-# For Section 1.2
-def ids_driver_standard(disks, pegs):
+def q1_1_ids_driver(disks, pegs):
     start_state = State.start_state(disks, pegs)
-    solution, expanded_paths = iterative_deepening_search(start_state, "old")
+    solution, expanded_paths = ids_search(start_state, "old")
     print(f"Performing iterative deepening search on disks: {disks} and pegs: {pegs}")
     print_solution(start_state, solution)
     
     print(f"Solution length f({disks},{pegs}) = {len(solution)}")
     print(f"Expanded states: {expanded_paths}")
 
-    # placeholder for now, can change later
+    # placeholder for now, can change 
     return
 
-# For Section 1.3
-def ids_driver_k(disks, pegs):
+def q1_3a_ids_driver_k(disks, pegs):
     start_state = State.start_state(disks, pegs)
-    solution, expanded_paths = iterative_deepening_search(start_state, "new")
+    solution, expanded_paths = ids_search(start_state, "new")
 
     print(f"Computing k({disks}) with {pegs} pegs using iterative deepening search")
     print(f"k({disks}) = {len(solution)}")
@@ -187,8 +186,7 @@ def ids_driver_k(disks, pegs):
 
     return solution, expanded_paths
 
-# Section 1.2
-def ida_star_bound_search(state, g, bound, path_set, search_statistics):
+def ida_star_bounded_search(state, g, bound, path_set, search_statistics):
     f = g + state.h
 
     if f > bound:
@@ -207,7 +205,7 @@ def ida_star_bound_search(state, g, bound, path_set, search_statistics):
             continue
             
         path_set.add(state_key)
-        result, value = ida_star_bound_search(child, g + cost, bound, path_set, search_statistics)
+        result, value = ida_star_bounded_search(child, g + cost, bound, path_set, search_statistics)
         path_set.remove(state_key)
 
         if result is not None:
@@ -224,20 +222,19 @@ def ida_star_search(state):
     init_state_key = create_state_key(state)
 
     while True:
-        result, lowest_val = ida_star_bound_search(state, 0, bound, {init_state_key}, search_statistics)
+        result, lowest_val = ida_star_bounded_search(state, 0, bound, {init_state_key}, search_statistics)
 
         if result is not None:
             return result, search_statistics["expanded_paths"]
         
         if lowest_val == float("inf"):
-            # no solution found
             return None, search_statistics["expanded_paths"]
 
         bound = lowest_val
     
     return
 
-def ida_star_driver(disks, pegs, heuristic, print_moves):
+def q1_2_ida_star_driver(disks, pegs, heuristic, print_moves):
     State.heuristic_name = heuristic
     start_state = State.start_state(disks, pegs)
     solution, expanded_paths = ida_star_search(start_state)
@@ -257,7 +254,7 @@ def ida_star_driver(disks, pegs, heuristic, print_moves):
 
     return len(solution), expanded_paths
 
-def ida_star_driver_4a(disks, pegs, print_moves):
+def q1_3c_ida_star_driver_h4a(disks, pegs, print_moves):
     State.heuristic_name = "h4a"
     start_state = State.start_state(disks, pegs)
     solution, expanded_paths = ida_star_search(start_state)
