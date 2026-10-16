@@ -332,7 +332,7 @@ class BaggingEnsemble:
         criterion: str = "information_gain",
         max_depth: Optional[int] = None,
         feature_subsample_size: Optional[int] = None,
-        random_state: int = 0,
+        random_state: int = 3411,
     ) -> None:
         self.n_estimators = n_estimators
         self.criterion = criterion
@@ -361,6 +361,9 @@ class BaggingEnsemble:
             votes = Counter(predictions[row_index] for predictions in all_predictions)
             final_predictions.append(max(sorted(votes), key=lambda label: votes[label]))
         return final_predictions
+
+    def average_depth(self) -> float:
+        return sum(tree.tree_depth() for tree in self.trees) / len(self.trees)
 
 
 def evaluate_model(
