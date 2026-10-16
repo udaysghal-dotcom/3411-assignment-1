@@ -89,7 +89,6 @@ def entropy(rows: Sequence[dict]) -> float:
             result -= probability * math.log2(probability)
     return result
 
-
 @dataclass
 class Split:
     feature: str
@@ -119,7 +118,7 @@ class DecisionTree:
         max_depth: Optional[int] = None,
         min_samples_split: int = 2,
         feature_subsample_size: Optional[int] = None,
-        random_state: int = 0,
+        random_state: int = 3411,
     ) -> None:
         self.criterion = criterion
         self.max_depth = max_depth
@@ -229,10 +228,18 @@ class DecisionTree:
         raise ValueError(f"Unknown criterion: {self.criterion}")
 
     def information_gain(self, rows: Sequence[dict], partitions: Sequence[Sequence[dict]]) -> float:
-        # TODO: implement information gain.
-        raise NotImplementedError
+        total_entries = len(rows)
+        total_entropy = entropy(rows)
+        
+        child_entropy = 0.0
+        for part in partitions:
+            if len(part) == 0:
+                continue 
 
-
+            weight = len(part) / total_entries
+            child_entropy += weight * entropy(part)
+        
+        return total_entropy - child_entropy
 
     def best_categorical_split(self, rows: Sequence[dict], feature: str) -> Optional[Split]:
         grouped = defaultdict(list)
@@ -245,8 +252,44 @@ class DecisionTree:
         return Split(feature=feature, score=score, kind="categorical", partitions=dict(grouped))
 
     def best_numeric_split(self, rows: Sequence[dict], feature: str) -> Optional[Split]:
-        # TODO: search all candidate thresholds and return the best split.
-        raise NotImplementedError
+        values = []
+        for row in rows:
+            value = row[feature]
+            if value not in values:
+                values.append(value)
+        values.sort()
+
+        if len(values) <= 1:
+            return None
+
+        best_score = -1.0
+        best_t = None
+
+        for i in range(len(values) - 1):
+            threshold = (values[i] + values[i + 1]) / 2
+
+            left = []
+            right = []
+            for row in rows:
+                if row[feature] <= threshold:
+                    left.append(row)
+                else:
+                    right.append(row)
+
+            score = self.score_split(rows, [left, right])
+            if score > best_score:
+                best_score = score
+                best_t = threshold
+
+        if best_t is None:
+            return None
+
+        return Split(
+            feature=feature,
+            score=best_score,
+            kind="numeric",
+            threshold=best_t,
+        )
 
     def _tree_depth(self, node: Optional[Node]) -> int:
         if node is None or node.is_leaf:
