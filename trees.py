@@ -19,10 +19,6 @@ NUMERIC_FEATURES = {
     "num_services",
 }
 
-TARGET = "churned"
-ID_COLUMN = "customer_id"
-
-
 def load_csv(path: Path) -> List[dict]:
     with path.open("r", newline="", encoding="utf-8") as handle:
         reader = csv.DictReader(handle)
@@ -32,7 +28,7 @@ def load_csv(path: Path) -> List[dict]:
             for key, value in row.items():
                 if key in NUMERIC_FEATURES:
                     parsed[key] = float(value)
-                elif key == TARGET:
+                elif key == "churned":
                     parsed[key] = int(value)
                 else:
                     parsed[key] = value
@@ -71,7 +67,7 @@ def f1_score_positive(y_true, y_pred):
 
     
 def class_counts(rows: Sequence[dict]) -> Counter:
-    return Counter(row[TARGET] for row in rows)
+    return Counter(row["churned"] for row in rows)
 
 
 def majority_label(rows: Sequence[dict]) -> int:
@@ -119,17 +115,19 @@ class DecisionTree:
         min_samples_split: int = 2,
         feature_subsample_size: Optional[int] = None,
         random_state: int = 3411,
+        min_gain: float = 0.0,
     ) -> None:
         self.criterion = criterion
         self.max_depth = max_depth
         self.min_samples_split = min_samples_split
+        self.min_gain = min_gain
         self.feature_subsample_size = feature_subsample_size
         self.random = random.Random(random_state)
         self.root: Optional[Node] = None
         self.features: List[str] = []
 
     def fit(self, rows: Sequence[dict]) -> None:
-        self.features = [key for key in rows[0] if key not in {TARGET, ID_COLUMN}]
+        self.features = [key for key in rows[0] if key not in {"churned", "customer_id"}]
         self.root = self._build_tree(list(rows), depth=0)
 
     def predict_one(self, row: dict) -> int:
@@ -165,7 +163,7 @@ class DecisionTree:
             return Node(prediction=prediction, depth=depth)
 
         split = self._best_split(rows)
-        if split is None or split.score <= 0.0:
+        if split is None or split.score <= self.min_gain:
             return Node(prediction=prediction, depth=depth)
 
         if split.kind == "numeric":
@@ -333,10 +331,12 @@ class BaggingEnsemble:
         max_depth: Optional[int] = None,
         feature_subsample_size: Optional[int] = None,
         random_state: int = 3411,
+        min_gain: float = 0.0,
     ) -> None:
         self.n_estimators = n_estimators
         self.criterion = criterion
         self.max_depth = max_depth
+        self.min_gain = min_gain
         self.feature_subsample_size = feature_subsample_size
         self.random = random.Random(random_state)
         self.trees: List[DecisionTree] = []
@@ -350,6 +350,7 @@ class BaggingEnsemble:
                 max_depth=self.max_depth,
                 feature_subsample_size=self.feature_subsample_size,
                 random_state=index,
+                min_gain=self.min_gain,
             )
             tree.fit(sample)
             self.trees.append(tree)
@@ -366,6 +367,52 @@ class BaggingEnsemble:
         return sum(tree.tree_depth() for tree in self.trees) / len(self.trees)
 
 
+class WeightedVotingForest(BaggingEnsemble):
+    def __init__(
+        self,
+        n_estimators=10,
+        criterion="information_gain",
+        max_depth=None,
+        feature_subsample_size=None,
+        random_state=3411,
+    ):
+        super().__init__(
+            n_estimators=n_estimators,
+            criterion=criterion,
+            max_depth=max_depth,
+            feature_subsample_size=feature_subsample_size,
+            random_state=random_state,
+        )
+        self.weights = []
+
+    def fit(self, rows, validation_rows):
+        super().fit(rows)
+
+        labels = []
+        for row in validation_rows:
+            labels.append(row["churned"])
+
+        self.weights = []
+        for tree in self.trees:
+            predictions = tree.predict(validation_rows)
+            weight = accuracy_score(labels, predictions)
+            self.weights.append(weight)
+
+    def predict(self, rows):
+        final_predictions = []
+
+        for row in rows:
+            weighted_votes = defaultdict(float)
+            for tree_index, tree in enumerate(self.trees):
+                churn_label = tree.predict_one(row)
+                weighted_votes[churn_label] += self.weights[tree_index]
+
+            winner = max(sorted(weighted_votes), key=weighted_votes.get)
+            final_predictions.append(winner)
+
+        return final_predictions
+
+
 def evaluate_model(
     model,
     train_rows: Sequence[dict],
@@ -377,7 +424,7 @@ def evaluate_model(
         ("valid", valid_rows),
         ("test", test_rows),
     ]:
-        y_true = [row[TARGET] for row in rows]
+        y_true = [row["churned"] for row in rows]
         y_pred = model.predict(rows)
 
         accuracy = accuracy_score(y_true, y_pred)
@@ -409,7 +456,7 @@ def run_starter_summary(base_dir: Path) -> None:
         ("validation", valid_rows),
         ("test", test_rows),
     ]:
-        labels = [row[TARGET] for row in rows]
+        labels = [row["churned"] for row in rows]
         predictions = [baseline] * len(rows)
         baseline_accuracy = accuracy_score(labels, predictions)
         baseline_f1 = f1_score_positive(labels, predictions)
@@ -419,11 +466,6 @@ def run_starter_summary(base_dir: Path) -> None:
             f"accuracy={baseline_accuracy:.4f}, "
             f"F1={baseline_f1:.4f}"
         )
-
-    print("\nTODO methods to implement:")
-    print("- DecisionTree.information_gain")
-    print("- DecisionTree.best_numeric_split")
-    print("- Experiment loops for depth control, bagging, and random forests")
 
 
 if __name__ == "__main__":
