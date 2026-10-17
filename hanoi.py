@@ -254,7 +254,7 @@ def q1_2_ida_star_driver(disks, pegs, heuristic, print_moves):
 
     return len(solution), expanded_paths
 
-def q1_3c_ida_star_driver_h4a(disks, pegs, print_moves):
+def q1_3b_ida_star_driver_h4a(disks, pegs, print_moves):
     State.heuristic_name = "h4a"
     start_state = State.start_state(disks, pegs)
     solution, expanded_paths = ida_star_search(start_state)
@@ -294,6 +294,6 @@ if __name__ == "__main__":
 
     # 1.3b
     for d in range(1, 8):
-        q1_3c_ida_star_driver_h4a(d, 4, False)
+        q1_3b_ida_star_driver_h4a(d, 4, False)
     print()
 
