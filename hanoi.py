@@ -270,30 +270,3 @@ if __name__ == "__main__":
     arg_parser.add_argument("--disks", type=int, default=4)
     arg_parser.add_argument("--pegs", type=int, default=3)
     arguments = arg_parser.parse_args()
-    
-    # 1.1
-    q1_1_ids_driver(arguments.disks, arguments.pegs)
-    print("Q1.1 passed")
-
-    # 1.2
-    for d in (4, 5):
-        q1_2_ida_star_driver(d, 3, "h3a", False)
-    print("Q1.2a Passed")
-    
-    for d in (4, 5, 6):
-        q1_2_ida_star_driver(d, 3, "h3b", True)
-    print("Q1.2b Passed")
-
-    # 1.3a
-    k_values = []
-    for d in range(7):
-        solution, _ = q1_3a_ids_driver_k(d, 4)
-        k_values.append(len(solution))
-        print(k_values)
-    print("Q1.3a Passed")
-
-    # 1.3b
-    for d in range(1, 8):
-        q1_3b_ida_star_driver_h4a(d, 4, False)
-    print()
-
