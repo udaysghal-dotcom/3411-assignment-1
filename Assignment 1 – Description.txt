@@ -164,17 +164,12 @@ Set self.h to self.heuristic4a(), reinstate the original is goal() method, and a
 Include these values, as well as the number of expanded states, in your solution. As in the
 previous part, the largest case is much more expensive than the others: d = 7 requires on
 the order of ten million expanded states and may take a minute or two.
+
 Do you notice any mathematical relationship between f (d, 4) and k(d − 1)? State this
 relationship, and briefly explain why it should be true for all values of d.
 
 (c)
 
-Note: If you are interested in knowing how f (d, 4) can be computed for larger values of d, you
-might like to look at these two papers:
-• Korf, R., 2004. Best-First Frontier Search with Delayed Duplicate Detection, AAAI-04,
-650–657.
-• Korf, R. & Felner, A., 2007. Recent Progress in Heuristic Search: A Case Study of the
-Four-Peg Towers of Hanoi Problem, IJCAI-07, 2324–2329.
 
 2
 

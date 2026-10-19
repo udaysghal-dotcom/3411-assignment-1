@@ -326,14 +326,14 @@ class DecisionTree:
 class BaggingEnsemble:
     def __init__(
         self,
-        n_estimators: int = 10,
+        num_trees: int = 10,
         criterion: str = "information_gain",
         max_depth: Optional[int] = None,
         feature_subsample_size: Optional[int] = None,
         random_state: int = 3411,
         min_gain: float = 0.0,
     ) -> None:
-        self.n_estimators = n_estimators
+        self.num_trees = num_trees
         self.criterion = criterion
         self.max_depth = max_depth
         self.min_gain = min_gain
@@ -343,7 +343,7 @@ class BaggingEnsemble:
 
     def fit(self, rows: Sequence[dict]) -> None:
         self.trees = []
-        for index in range(self.n_estimators):
+        for index in range(self.num_trees):
             sample = [self.random.choice(rows) for _ in range(len(rows))]
             tree = DecisionTree(
                 criterion=self.criterion,
@@ -370,14 +370,14 @@ class BaggingEnsemble:
 class WeightedVotingForest(BaggingEnsemble):
     def __init__(
         self,
-        n_estimators=10,
+        num_trees=10,
         criterion="information_gain",
         max_depth=None,
         feature_subsample_size=None,
         random_state=3411,
     ):
         super().__init__(
-            n_estimators=n_estimators,
+            num_trees=num_trees,
             criterion=criterion,
             max_depth=max_depth,
             feature_subsample_size=feature_subsample_size,
